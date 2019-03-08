@@ -1,15 +1,18 @@
 import pandas as pd
 import numpy as np
-
-
+from sklearn.preprocessing import OneHotEncoder
 #training data
 train=pd.read_csv('fer2013.csv')
 
 x_train = train.iloc[:28709,1].values
-y_train = train.iloc[:28709,0].values
+y_train = train.iloc[:28709,0:1].values
+
+y_train=OneHotEncoder(categories='auto').fit_transform(y_train).toarray() 
 
 x_test = train.iloc[28709:,1].values
-y_test = train.iloc[28709:,0].values
+y_test = train.iloc[28709:,0:1].values
+
+y_test=OneHotEncoder(categories='auto').fit_transform(y_test).toarray() 
 
 
 def arr_to_image(x):
@@ -37,18 +40,26 @@ x2 = x2.reshape(7178,48,48,1)
 
 from keras.models import Sequential
 from keras.layers import Convolution2D    as Conv2D #for dealing with pictures
-from keras.layers import MaxPooling2D       #pool maps reduces the sizeof map
 from keras.layers import Flatten         #flatten the maps
 from keras.layers import Dense         
 
-#create model
 model = Sequential()
-#add model layers
-model.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(48,48,1)))
-model.add(Conv2D(32, kernel_size=3, activation='relu'))
+
+model.add(Conv2D(32, kernel_size=3, activation='relu', input_shape=(48,48,1)))
+
+model.add(Conv2D(128,(3,3),activation='relu'))
+model.add(Conv2D(64,(3,3),activation='relu'))
+
+
 model.add(Flatten())
-model.add(Dense(6, activation='softmax'))
+model.add(Dense(7, activation='softmax'))
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-model.fit(x1, y_train, validation_data=(x2, y_test), epochs=3)
+
+model.fit(x1, y_train, validation_data=(x2, y_test), epochs=100)
+
+"""
+import pickle
+with open('/home/jak/Desktop/face', 'wb') as f:
+    pickle.dump(model,f)"""
