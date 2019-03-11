@@ -40,9 +40,9 @@ x2 = x2.reshape(7178,48,48,1)
 
 from keras.models import Sequential
 from keras.layers import Convolution2D    as Conv2D #for dealing with pictures
-from keras.layers import Flatten         #flatten the maps
+from keras.layers import Flatten   , MaxPooling2D      #flatten the maps
 from keras.layers import Dense         
-
+"""
 model = Sequential()
 
 model.add(Conv2D(32, kernel_size=3, activation='relu', input_shape=(48,48,1)))
@@ -59,7 +59,71 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 
 model.fit(x1, y_train, validation_data=(x2, y_test), epochs=100)
 
-"""
 import pickle
 with open('/home/jak/Desktop/face', 'wb') as f:
-    pickle.dump(model,f)"""
+    pickle.dump(model,f)
+"""
+
+
+model = Sequential()
+
+model.add(Conv2D(32, (3, 3), activation='relu', padding="same", input_shape=(48,48,1)))
+model.add(Conv2D(32, (3, 3), padding="same", activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(64, (3, 3), activation='relu', padding="same"))
+model.add(Conv2D(64, (3, 3), padding="same", activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(96, (3, 3), dilation_rate=(2, 2), activation='relu', padding="same"))
+model.add(Conv2D(96, (3, 3), padding="valid", activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128, (3, 3), dilation_rate=(2, 2), activation='relu', padding="same"))
+model.add(Conv2D(128, (3, 3), padding="valid", activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(64, activation='sigmoid'))
+
+model.add(Dense(7 , activation='sigmoid'))
+
+model.compile(loss='binary_crossentropy',
+              optimizer='adam' ,
+              metrics=['accuracy'])
+
+print(model.summary())
+
+#model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+
+#model.fit(x1, y_train, validation_data=(x2, y_test), epochs=100)
+
+batch_size = 128
+epochs = 14
+
+model.compile(loss='binary_crossentropy', optimizer='adam' , metrics=['accuracy'])
+steps_per_epoch = len(x1) / batch_size
+validation_steps = len(y_test)/ batch_size
+
+from keras.preprocessing.image import ImageDataGenerator
+
+datagen = ImageDataGenerator(
+        featurewise_center=False,  
+        samplewise_center=False,  
+        featurewise_std_normalization=False,  
+        samplewise_std_normalization=False,  
+        zca_whitening=False,  
+        rotation_range=10,  
+        zoom_range = 0.0,  
+        width_shift_range=0.1,  
+        height_shift_range=0.1,  
+        horizontal_flip=False, 
+        vertical_flip=False)  
+
+datagen.fit(x1)
+
+history = model.fit_generator(datagen.flow(x1, y_train, batch_size=batch_size),
+                    steps_per_epoch=x1.shape[0] // batch_size,
+                    validation_data=(x2, y_test),
+                    epochs = epochs, verbose = 2)
+
+import pickle
+with open('/home/jak/Desktop/face', 'w') as f:
+    pickle.dump(model,f)
