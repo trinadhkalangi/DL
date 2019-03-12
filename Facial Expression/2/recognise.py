@@ -7,12 +7,12 @@ train=pd.read_csv('fer2013.csv')
 x_train = train.iloc[:28709,1].values
 y_train = train.iloc[:28709,0:1].values
 
-y_train=OneHotEncoder(categories='auto').fit_transform(y_train).toarray() 
+#y_train=OneHotEncoder(categories='auto').fit_transform(y_train).toarray() 
 
 x_test = train.iloc[28709:,1].values
 y_test = train.iloc[28709:,0:1].values
 
-y_test=OneHotEncoder(categories='auto').fit_transform(y_test).toarray() 
+#y_test=OneHotEncoder(categories='auto').fit_transform(y_test).toarray() 
 
 
 def arr_to_image(x):
@@ -80,13 +80,13 @@ model.add(Conv2D(128, (3, 3), dilation_rate=(2, 2), activation='relu', padding="
 model.add(Conv2D(128, (3, 3), padding="valid", activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(64, activation='sigmoid'))
+model.add(Dense(64, activation='softmax'))
 
-model.add(Dense(7 , activation='sigmoid'))
+model.add(Dense(7 , activation='softmax'))
 
-model.compile(loss='binary_crossentropy',
-              optimizer='adam' ,
-              metrics=['accuracy'])
+#model.compile(loss='binary_crossentropy',
+#              optimizer='adam' ,
+#              metrics=['accuracy'])
 
 print(model.summary())
 
@@ -98,7 +98,7 @@ print(model.summary())
 batch_size = 128
 epochs = 14
 
-model.compile(loss='binary_crossentropy', optimizer='adam' , metrics=['accuracy'])
+model.compile(loss='sparse_categorical_crossentropy', optimizer='SGD' , metrics=['accuracy'])
 steps_per_epoch = len(x1) / batch_size
 validation_steps = len(y_test)/ batch_size
 
@@ -120,7 +120,7 @@ datagen = ImageDataGenerator(
 datagen.fit(x1)
 
 history = model.fit_generator(datagen.flow(x1, y_train, batch_size=batch_size),
-                    steps_per_epoch=x1.shape[0] // batch_size,
+                    steps_per_epoch=x1.shape[0] / batch_size,
                     validation_data=(x2, y_test),
                     epochs = epochs, verbose = 2)
 
